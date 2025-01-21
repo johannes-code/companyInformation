@@ -17,6 +17,7 @@ import  {useQuery} from '@tanstack/react-query'
     return (
       <div>
         <ul>
+      
           {data._embedded.enheter
             .map((navn) => navn.navn)
             .sort((a, b) => a.localeCompare(b,'nb-NO'))
@@ -24,6 +25,7 @@ import  {useQuery} from '@tanstack/react-query'
               <li key={index}>{navn}</li>
             ))}
         </ul>
+      
       </div>
     )
 }  
