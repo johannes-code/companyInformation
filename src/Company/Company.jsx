@@ -16,8 +16,7 @@ import  {useQuery} from '@tanstack/react-query'
     
     return (
       <div>
-        <ul>
-      
+             
         {data._embedded.enheter
     .filter(enhet => new Date(enhet.stiftelsesdato) >= new Date('2000-01-01'))
   .map((enhet) => ({
@@ -27,15 +26,9 @@ import  {useQuery} from '@tanstack/react-query'
   }))
   .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO'))
   .map((enhet, index) => (
-    <li key={index}>{enhet.navn} || {enhet.stiftelsesdato} || {enhet.organisasjonsnummer}</li>
+       <li key={index}>{enhet.navn} || {enhet.stiftelsesdato} || {enhet.organisasjonsnummer}</li>
   ))
-}
-
-
-
-            
-        </ul>
-      
+}           
       </div>
     )
 }  
