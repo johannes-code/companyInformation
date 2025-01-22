@@ -12,7 +12,7 @@ const queryClient = new QueryClient()
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      {/* <KommList /> */}
+      { <KommList /> }
       {<CompanyList/>}
     </QueryClientProvider>
   )
