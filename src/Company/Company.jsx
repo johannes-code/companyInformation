@@ -22,11 +22,12 @@ import  {useQuery} from '@tanstack/react-query'
     .filter(enhet => new Date(enhet.stiftelsesdato) >= new Date('2000-01-01'))
   .map((enhet) => ({
     navn: enhet.navn,
+    stiftelsesdato: enhet.stiftelsesdato,
     organisasjonsnummer: enhet.organisasjonsnummer
   }))
   .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO'))
   .map((enhet, index) => (
-    <li key={index}>{enhet.organisasjonsnummer} || {enhet.navn} </li>
+    <li key={index}>{enhet.navn} || {enhet.stiftelsesdato} || {enhet.organisasjonsnummer}</li>
   ))
 }
 
