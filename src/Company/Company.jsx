@@ -4,7 +4,7 @@ import  {useQuery} from '@tanstack/react-query'
     const { isPending, error, data } = useQuery({
       queryKey: ['repoData'],
       queryFn: () =>
-        fetch('https://data.brreg.no/enhetsregisteret/api/enheter').then((res) =>
+        fetch('https://data.brreg.no/enhetsregisteret/api/enheter?size=1000').then((res) =>
           res.json(),
         ),
     })
@@ -18,12 +18,19 @@ import  {useQuery} from '@tanstack/react-query'
       <div>
         <ul>
       
-          {data._embedded.enheter
-            .map((navn) => navn.navn)
-            .sort((a, b) => a.localeCompare(b,'nb-NO'))
-            .map((navn, index) => (
-              <li key={index}>{navn}</li>
-            ))}
+        {data._embedded.enheter
+  .map((enhet) => ({
+    navn: enhet.navn,
+    organisasjonsnummer: enhet.organisasjonsnummer
+  }))
+  .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO'))
+  .map((enhet, index) => (
+    <li key={index}>{enhet.organisasjonsnummer} || {enhet.navn} </li>
+  ))
+}
+
+
+            
         </ul>
       
       </div>
