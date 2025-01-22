@@ -19,6 +19,7 @@ import  {useQuery} from '@tanstack/react-query'
         <ul>
       
         {data._embedded.enheter
+    .filter(enhet => new Date(enhet.stiftelsesdato) >= new Date('2000-01-01'))
   .map((enhet) => ({
     navn: enhet.navn,
     organisasjonsnummer: enhet.organisasjonsnummer
@@ -28,6 +29,7 @@ import  {useQuery} from '@tanstack/react-query'
     <li key={index}>{enhet.organisasjonsnummer} || {enhet.navn} </li>
   ))
 }
+
 
 
             
