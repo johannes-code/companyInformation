@@ -1,9 +1,16 @@
-import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 
 export function CompanyList() {
   const [companyName, setCompanyName] = useState('');
   const [year, setYear] = useState('');
+  const [yearOptions, setYearOptions] = useState([]);
+
+  useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: currentYear - 1999 }, (_, index) => currentYear - index);
+    setYearOptions(years);
+  }, []);
 
   const { isPending, error, data } = useQuery({
     queryKey: ['repoData', companyName, year],
@@ -11,10 +18,10 @@ export function CompanyList() {
       fetch('https://data.brreg.no/enhetsregisteret/api/enheter?size=1000').then((res) =>
         res.json(),
       ),
-  })
+  });
 
-  if (isPending) return 'Loading...'
-  if (error) return 'An error has occurred: ' + error.message
+  if (isPending) return 'Loading...';
+  if (error) return 'An error has occurred: ' + error.message;
 
   const filteredCompanies = data?._embedded?.enheter
     .filter(enhet => {
@@ -37,12 +44,17 @@ export function CompanyList() {
         value={companyName}
         onChange={(e) => setCompanyName(e.target.value)}
       />
-      <input
-        type="number"
-        placeholder="Year"
+      <select
         value={year}
         onChange={(e) => setYear(e.target.value)}
-      />
+      >
+        <option value="">Select Year</option>
+        {yearOptions.map((yearOption) => (
+          <option key={yearOption} value={yearOption}>
+            {yearOption}
+          </option>
+        ))}
+      </select>
       <ul>
         {filteredCompanies.map((enhet, index) => (
           <li key={index}>{enhet.navn} || {enhet.stiftelsesdato} || {enhet.organisasjonsnummer}</li>
