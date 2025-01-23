@@ -1,0 +1,6 @@
+@import "./components/SearchSection/Searchfield.css";
+@import "./components/ResultSection/ResultSection.css";
+
+body {
+  font-family: "Times New Roman", Times, serif;
+}

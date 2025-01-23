@@ -1,0 +1,13 @@
+#result {
+  border: solid, grey 1px;
+  border-radius: 18px;
+}
+
+ul {
+  padding-top: 16px;
+  list-style-type: none;
+}
+
+li {
+  padding: 2px;
+}
