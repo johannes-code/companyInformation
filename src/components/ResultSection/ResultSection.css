@@ -1,4 +1,6 @@
 #result {
+  border: solid, grey 1px;
+  border-radius: 18px;
 }
 
 ul {
@@ -7,4 +9,5 @@ ul {
 }
 
 li {
+  padding: 2px;
 }
