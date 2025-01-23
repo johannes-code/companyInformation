@@ -34,7 +34,7 @@ h1 {
 }
 #search {
   padding: 10px;
-  border: 1px solid #ccc;
+  border: 1px solid grey;
   border-radius: 18px;
   font-size: 16px;
 }
@@ -57,6 +57,7 @@ input {
   padding: 16px;
 }
 
-input {
+::placeholder {
   color: blue;
+  opacity: 1;
 }
