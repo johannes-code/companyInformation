@@ -84,3 +84,43 @@ export function CompanyList() {
     </div>
   );
 }
+
+export function KommList() {
+  const [selectedKommune, setSelectedKommune] = useState('');
+
+  const { isPending, error, data } = useQuery({
+    queryKey: ['repoData'],
+    queryFn: () =>
+      fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=1000').then((res) =>
+        res.json(),
+      ),
+  });
+
+  if (isPending) return 'Loading...';
+  if (error) return 'An error has occurred: ' + error.message;
+
+  const sortedKommuner = data?._embedded?.kommuner
+    .map((by) => by.navn)
+    .sort((a, b) => a.localeCompare(b, 'nb-NO'));
+
+  const handleKommuneChange = (event) => {
+    setSelectedKommune(event.target.value);
+  };
+
+  return (
+    <div>
+      <select value={selectedKommune} onChange={handleKommuneChange}>
+        <option value="">Velg kommune</option>
+        {sortedKommuner.map((navn, index) => (
+          <option key={index} value={navn}>
+            {navn}
+          </option>
+        ))}
+      </select>
+
+      {selectedKommune && (
+        <p>Du har valgt: {selectedKommune}</p>
+      )}
+    </div>
+  );
+}

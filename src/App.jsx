@@ -1,5 +1,5 @@
 import './App.css'
-import { KommList } from './KommList/KommList'
+import { KommList } from './Company/Company'
 import { CompanyList } from './Company/Company'
 import {
   
