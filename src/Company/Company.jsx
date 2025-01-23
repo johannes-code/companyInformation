@@ -119,7 +119,7 @@ export function KommList() {
       </select>
 
       {selectedKommune && (
-        <p>Du har valgt: {selectedKommune}</p>
+        <p>You have selected: {selectedKommune}</p>
       )}
     </div>
   );
