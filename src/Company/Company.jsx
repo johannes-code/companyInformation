@@ -108,11 +108,35 @@ export function CompanyList() {
       </section>
 
       <section id="result">
-        <ul>
-          {filteredCompanies.map((enhet, index) => (
-            <li key={index}>{enhet.navn} || {enhet.stiftelsesdato} || {enhet.organisasjonsnummer}</li>
-          ))}
-        </ul>
+      <div className="company-list">
+  <div className="column">
+    <h5>Company Name</h5>
+    <ul>
+      {filteredCompanies.map((enhet, index) => (
+        <li key={`name-${index}`}>{enhet.navn}</li>
+      ))}
+    </ul>
+  </div>
+  
+  <div className="column">
+    <h5>Establishment Date</h5>
+    <ul>
+      {filteredCompanies.map((enhet, index) => (
+        <li key={`date-${index}`}>{enhet.stiftelsesdato}</li>
+      ))}
+    </ul>
+  </div>
+  
+  <div className="column">
+    <h5>Organization Number</h5>
+    <ul>
+      {filteredCompanies.map((enhet, index) => (
+        <li key={`org-${index}`}>{enhet.organisasjonsnummer}</li>
+      ))}
+    </ul>
+  </div>
+</div>
+
       </section>
     </div>
   );
