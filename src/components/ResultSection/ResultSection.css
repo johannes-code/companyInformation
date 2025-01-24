@@ -1,13 +1,16 @@
 #result {
   border: solid, grey 1px;
   border-radius: 18px;
+  box-shadow: 10px 10px 5px lightcoral;
 }
 
 ul {
   padding-top: 16px;
   list-style-type: none;
+  -webkit-column-count: 3;
 }
 
 li {
+  display: grid;
   padding: 2px;
 }
