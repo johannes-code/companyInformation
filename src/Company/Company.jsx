@@ -30,7 +30,7 @@ export function CompanyList() {
   const { isPending: companiesPending, error: companiesError, data: companiesData } = useQuery({
     queryKey: ['companies', companyName, year, selectedKommune],
     queryFn: () =>
-      fetch('https://data.brreg.no/enhetsregisteret/api/enheter?size=1000').then((res) =>
+      fetch('https://data.brreg.no/enhetsregisteret/api/enheter?size=100').then((res) =>
         res.json(),
       ),
   });
@@ -38,7 +38,7 @@ export function CompanyList() {
   const { isPending: kommunePending, error: kommuneError, data: kommuneData } = useQuery({
     queryKey: ['kommuner'],
     queryFn: () =>
-      fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=1000').then((res) =>
+      fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=100').then((res) =>
         res.json(),
       ),
   });

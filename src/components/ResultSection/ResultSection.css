@@ -2,12 +2,14 @@
   border: solid, grey 1px;
   border-radius: 18px;
   box-shadow: 10px 10px 5px lightcoral;
-  -webkit-column-count: 3;
+  columns: 3;
 }
 
 ul {
   padding-top: 16px;
   list-style-type: none;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
 }
 
 li {
