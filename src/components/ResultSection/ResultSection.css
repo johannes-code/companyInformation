@@ -7,6 +7,7 @@
 
 ul {
   padding-top: 16px;
+  padding-bottom: 16px;
   list-style-type: none;
   break-inside: avoid;
   -webkit-column-break-inside: avoid;
@@ -15,4 +16,8 @@ ul {
 li {
   display: grid;
   padding: 2px;
+}
+
+.column {
+  padding-top: 12px;
 }
