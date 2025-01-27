@@ -1,144 +1,142 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useCallback } from 'react';
+import { useQuery } from 'react-query';
 
-export function CompanyList() {
-  const [inputCompanyName, setInputCompanyName] = useState('');
-  const [yearOptions, setYearOptions] = useState([]);
-  const [searchParams, setSearchParams] = useState({ companyName: '', year: '', kommune: '' });
-
-  useEffect(() => {
-    const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: currentYear - 1999 }, (_, index) => currentYear - index);
-    setYearOptions(years);
-  }, []);
-
-  const fetchCompanies = useCallback(() => {
-    let url = 'https://data.brreg.no/enhetsregisteret/api/enheter?size=100';
-    if (searchParams.companyName) url += `&navn=${encodeURIComponent(searchParams.companyName)}`;
-    if (searchParams.year) url += `&stiftelsesdatoFra=${searchParams.year}-01-01&stiftelsesdatoTil=${searchParams.year}-12-31`;
-    if (searchParams.kommune) url += `&kommunenummer=${searchParams.kommune}`;
-    console.log('Henter selskaper fra:', url);
-    return fetch(url).then((res) => res.json());
-  }, [searchParams]);
-
-  const { isPending, error, data, refetch } = useQuery({
-    queryKey: ['companies', searchParams],
-    queryFn: fetchCompanies,
-    enabled: false,
+export function companyList(){}
+  // State for søkeparametere
+  const [searchParams, setSearchParams] = useState({
+    companyName: '',
+    year: '',
+    kommune: '',
   });
 
-  const { data: kommuneData } = useQuery({
+  // Hent kommunedata fra API-et
+  const { data: kommuneData, isLoading: isLoadingKommuner, error: kommuneError } = useQuery({
     queryKey: ['kommuner'],
     queryFn: () =>
       fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=100')
         .then((res) => res.json())
-        .then((data) => {
-          console.log('Kommuner hentet:', data);
-          return data;
-        }),
+        .then((data) => data._embedded.kommuner), // Tilpass til API-strukturen
   });
 
-  useEffect(() => {
-    refetch();
-  }, [searchParams, refetch]);
+  // Funksjon for å hente selskaper basert på søkeparametere
+  const fetchCompanies = useCallback(() => {
+    let url = 'https://data.brreg.no/enhetsregisteret/api/enheter/?size=100';
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setSearchParams({
-      companyName: inputCompanyName,
-      year: document.getElementById('year').value,
-      kommune: document.getElementById('kommune').value,
+    if (searchParams.companyName) {
+      url += `&navn=${encodeURIComponent(searchParams.companyName)}`;
+    }
+
+    if (searchParams.year) {
+      url += `&fraStiftelsesdato=${searchParams.year}-01-01&tilStiftelsesdato=${searchParams.year}-12-31`;
+    }
+
+    if (searchParams.kommune) {
+      console.log('Kommune valgt:', searchParams.kommune);
+      url += `&foretningsadresse.kommune=${encodeURIComponent(searchParams.kommune)}`;
+    }
+
+    console.log('Generert URL:', url);
+
+    return fetch(url).then((res) => {
+      if (!res.ok) {
+        throw new Error(`Feil ved henting av selskaper: ${res.statusText}`);
+      }
+      return res.json();
     });
+  }, [searchParams]);
+
+  // React Query for å hente selskaper
+  const { data: companyData, isLoading: isLoadingCompanies, error: companyError, refetch } = useQuery({
+    queryKey: ['companies', searchParams],
+    queryFn: fetchCompanies,
+    enabled: false, // Må trigges manuelt med refetch()
+  });
+
+  // Håndter søkeknappen
+  const handleSearch = () => {
+    refetch();
   };
 
-  const handleYearChange = (e) => {
-    setSearchParams(prev => ({ ...prev, year: e.target.value }));
-  };
-
+  // Håndter endring i nedtrekksmenyen
   const handleKommuneChange = (e) => {
-    setSearchParams(prev => ({ ...prev, kommune: e.target.value }));
+    setSearchParams((prev) => ({
+      ...prev,
+      kommune: e.target.value,
+    }));
   };
 
-  if (isPending) return <div>Laster...</div>;
-  if (error) return <div>En feil har oppstått: {error.message}</div>;
+  // Håndter endring i firmanavn eller år
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchParams((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-  const sortedKommuner = kommuneData?._embedded?.kommuner
-    ?.map((by) => ({ navn: by.navn, nummer: by.kommunenummer }))
-    .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO')) || [];
-
-  const filteredCompanies = data?._embedded?.enheter
-    ?.filter(enhet => new Date(enhet.stiftelsesdato) >= new Date('2000-01-01'))
-    .map((enhet) => ({
-      navn: enhet.navn,
-      stiftelsesdato: enhet.stiftelsesdato,
-      organisasjonsnummer: enhet.organisasjonsnummer
-    }))
-    .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO')) || [];
-
+  // Render komponenten
   return (
     <div>
-      <section id="search-section">
-        <form id="search" onSubmit={handleSearch}>
-          <input
-            type="search"
-            placeholder="Selskapsnavn"
-            value={inputCompanyName}
-            onChange={(e) => setInputCompanyName(e.target.value)}
-          />
-          <select id="year" onChange={handleYearChange} value={searchParams.year}>
-            <option value="">Velg år</option>
-            {yearOptions.map((yearOption) => (
-              <option key={yearOption} value={yearOption}>
-                {yearOption}
-              </option>
-            ))}
-          </select>
-          <select id="kommune" onChange={handleKommuneChange} value={searchParams.kommune}>
-            <option value="">Velg kommune</option>
-            {sortedKommuner.map((kommune) => (
-              <option key={kommune.nummer} value={kommune.nummer}>
-                {kommune.navn}
-              </option>
-            ))}
-          </select>
-          <button type="submit">Søk</button>
-        </form>
-      </section>
+      <h1>Søk etter selskaper</h1>
 
-      <section id="result">
-        {filteredCompanies.length > 0 ? (
-          <div className="company-list">
-            <div className="column">
-              <h5>Selskapsnavn</h5>
-              <ul>
-                {filteredCompanies.map((enhet, index) => (
-                  <li key={`name-${index}`}>{enhet.navn}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="column">
-              <h5>Stiftelsesdato</h5>
-              <ul>
-                {filteredCompanies.map((enhet, index) => (
-                  <li key={`date-${index}`}>{enhet.stiftelsesdato}</li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="column">
-              <h5>Organisasjonsnummer</h5>
-              <ul>
-                {filteredCompanies.map((enhet, index) => (
-                  <li key={`org-${index}`}>{enhet.organisasjonsnummer}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ) : (
-          <div>Ingen resultater funnet</div>
-        )}
-      </section>
+      {/* Kommunenedtrekksmeny */}
+      {isLoadingKommuner ? (
+        <p>Laster kommuner...</p>
+      ) : kommuneError ? (
+        <p>En feil oppstod ved henting av kommuner: {kommuneError.message}</p>
+      ) : (
+        <select value={searchParams.kommune} onChange={handleKommuneChange}>
+          <option value="">Velg en kommune</option>
+          {kommuneData.map((kommune) => (
+            <option key={kommune.nummer} value={kommune.nummer}>
+              {kommune.navn}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {/* Inputfelter for firmanavn og år */}
+      <input
+        type="text"
+        name="companyName"
+        placeholder="Firmanavn"
+        value={searchParams.companyName}
+        onChange={handleInputChange}
+      />
+      <input
+        type="number"
+        name="year"
+        placeholder="År"
+        value={searchParams.year}
+        onChange={handleInputChange}
+      />
+
+      {/* Søkeknapp */}
+      <button onClick={handleSearch}>Søk</button>
+
+      {/* Vise resultater */}
+      {isLoadingCompanies ? (
+        <p>Laster selskaper...</p>
+      ) : companyError ? (
+        <p>En feil oppstod ved henting av selskaper: {companyError.message}</p>
+      ) : companyData && companyData._embedded && companyData._embedded.enheter ? (
+        <ul>
+          {companyData._embedded.enheter.map((company) => (
+            <li key={company.organisasjonsnummer}>
+              {company.navn} (Org.nr: {company.organisasjonsnummer})
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>Ingen selskaper funnet.</p>
+      )}
     </div>
   );
-}
+};
+
+// Funksjon for å hente kommunedata fra API-et
+const fetchApiData = () =>
+  fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=100')
+    .then((res) => res.json())
+    .then((data) => data._embedded.kommuner); // Tilpass til API-strukturen
+
