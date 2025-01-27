@@ -1,73 +1,79 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 export function CompanyList() {
   const [inputCompanyName, setInputCompanyName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [year, setYear] = useState('');
   const [yearOptions, setYearOptions] = useState([]);
-  const [selectedKommune, setSelectedKommune] = useState('');
+  const [searchParams, setSearchParams] = useState({ companyName: '', year: '', kommune: '' });
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: currentYear - 1999 }, (_, index) => currentYear - index);
     setYearOptions(years);
-  
-    const handleKeyDown = (event) => {
-      if (event.key === 'Enter' && event.target.tagName === 'INPUT') {
-        event.preventDefault();
-      }
-    }
-  
-    document.addEventListener('keydown', handleKeyDown);
-  
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
   }, []);
-  
 
-  const { isPending: companiesPending, error: companiesError, data: companiesData } = useQuery({
-    queryKey: ['companies', companyName, year, selectedKommune],
-    queryFn: () =>
-      fetch('https://data.brreg.no/enhetsregisteret/api/enheter?size=100').then((res) =>
-        res.json(),
-      ),
+  const fetchCompanies = useCallback(() => {
+    let url = 'https://data.brreg.no/enhetsregisteret/api/enheter?size=100';
+    if (searchParams.companyName) url += `&navn=${encodeURIComponent(searchParams.companyName)}`;
+    if (searchParams.year) url += `&stiftelsesdatoFra=${searchParams.year}-01-01&stiftelsesdatoTil=${searchParams.year}-12-31`;
+    if (searchParams.kommune) url += `&kommunenummer=${searchParams.kommune}`;
+    console.log('Henter selskaper fra:', url);
+    return fetch(url).then((res) => res.json());
+  }, [searchParams]);
+
+  const { isPending, error, data, refetch } = useQuery({
+    queryKey: ['companies', searchParams],
+    queryFn: fetchCompanies,
+    enabled: false,
   });
 
-  const { isPending: kommunePending, error: kommuneError, data: kommuneData } = useQuery({
+  const { data: kommuneData } = useQuery({
     queryKey: ['kommuner'],
     queryFn: () =>
-      fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=100').then((res) =>
-        res.json(),
-      ),
+      fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=100')
+        .then((res) => res.json())
+        .then((data) => {
+          console.log('Kommuner hentet:', data);
+          return data;
+        }),
   });
+
+  useEffect(() => {
+    refetch();
+  }, [searchParams, refetch]);
 
   const handleSearch = (e) => {
     e.preventDefault();
-    setCompanyName(inputCompanyName);
+    setSearchParams({
+      companyName: inputCompanyName,
+      year: document.getElementById('year').value,
+      kommune: document.getElementById('kommune').value,
+    });
   };
 
-  if (companiesPending || kommunePending) return 'Loading...';
-  if (companiesError || kommuneError) return 'An error has occurred: ' + (companiesError || kommuneError).message;
+  const handleYearChange = (e) => {
+    setSearchParams(prev => ({ ...prev, year: e.target.value }));
+  };
+
+  const handleKommuneChange = (e) => {
+    setSearchParams(prev => ({ ...prev, kommune: e.target.value }));
+  };
+
+  if (isPending) return <div>Laster...</div>;
+  if (error) return <div>En feil har oppstått: {error.message}</div>;
 
   const sortedKommuner = kommuneData?._embedded?.kommuner
-    .map((by) => by.navn)
-    .sort((a, b) => a.localeCompare(b, 'nb-NO'));
+    ?.map((by) => ({ navn: by.navn, nummer: by.kommunenummer }))
+    .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO')) || [];
 
-  const filteredCompanies = companiesData?._embedded?.enheter
-    .filter(enhet => {
-      const matchesName = enhet.navn.toLowerCase().includes(companyName.toLowerCase());
-      const matchesYear = year ? new Date(enhet.stiftelsesdato).getFullYear() === parseInt(year) : true;
-      const matchesKommune = selectedKommune ? enhet.forretningsadresse?.kommune === selectedKommune : true;
-      return matchesName && matchesYear && matchesKommune && new Date(enhet.stiftelsesdato) >= new Date('2000-01-01');
-    })
+  const filteredCompanies = data?._embedded?.enheter
+    ?.filter(enhet => new Date(enhet.stiftelsesdato) >= new Date('2000-01-01'))
     .map((enhet) => ({
       navn: enhet.navn,
       stiftelsesdato: enhet.stiftelsesdato,
       organisasjonsnummer: enhet.organisasjonsnummer
     }))
-    .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO'));
+    .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO')) || [];
 
   return (
     <div>
@@ -75,68 +81,63 @@ export function CompanyList() {
         <form id="search" onSubmit={handleSearch}>
           <input
             type="search"
-            placeholder="Company Name"
+            placeholder="Selskapsnavn"
             value={inputCompanyName}
             onChange={(e) => setInputCompanyName(e.target.value)}
           />
-          <select
-            id="year"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-          >
-            <option value="">Select Year</option>
+          <select id="year" onChange={handleYearChange} value={searchParams.year}>
+            <option value="">Velg år</option>
             {yearOptions.map((yearOption) => (
               <option key={yearOption} value={yearOption}>
                 {yearOption}
               </option>
             ))}
           </select>
-          <select
-            id="kommune"
-            value={selectedKommune}
-            onChange={(e) => setSelectedKommune(e.target.value)}
-          >
+          <select id="kommune" onChange={handleKommuneChange} value={searchParams.kommune}>
             <option value="">Velg kommune</option>
-            {sortedKommuner.map((navn, index) => (
-              <option key={index} value={navn}>
-                {navn}
+            {sortedKommuner.map((kommune) => (
+              <option key={kommune.nummer} value={kommune.nummer}>
+                {kommune.navn}
               </option>
             ))}
           </select>
-          <button type="submit">Search</button>
+          <button type="submit">Søk</button>
         </form>
       </section>
 
       <section id="result">
-      <div className="company-list">
-  <div className="column">
-    <h5>Company Name</h5>
-    <ul>
-      {filteredCompanies.map((enhet, index) => (
-        <li key={`name-${index}`}>{enhet.navn}</li>
-      ))}
-    </ul>
-  </div>
-  
-  <div className="column">
-    <h5>Establishment Date</h5>
-    <ul>
-      {filteredCompanies.map((enhet, index) => (
-        <li key={`date-${index}`}>{enhet.stiftelsesdato}</li>
-      ))}
-    </ul>
-  </div>
-  
-  <div className="column">
-    <h5>Organization Number</h5>
-    <ul>
-      {filteredCompanies.map((enhet, index) => (
-        <li key={`org-${index}`}>{enhet.organisasjonsnummer}</li>
-      ))}
-    </ul>
-  </div>
-</div>
-
+        {filteredCompanies.length > 0 ? (
+          <div className="company-list">
+            <div className="column">
+              <h5>Selskapsnavn</h5>
+              <ul>
+                {filteredCompanies.map((enhet, index) => (
+                  <li key={`name-${index}`}>{enhet.navn}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="column">
+              <h5>Stiftelsesdato</h5>
+              <ul>
+                {filteredCompanies.map((enhet, index) => (
+                  <li key={`date-${index}`}>{enhet.stiftelsesdato}</li>
+                ))}
+              </ul>
+            </div>
+            
+            <div className="column">
+              <h5>Organisasjonsnummer</h5>
+              <ul>
+                {filteredCompanies.map((enhet, index) => (
+                  <li key={`org-${index}`}>{enhet.organisasjonsnummer}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ) : (
+          <div>Ingen resultater funnet</div>
+        )}
       </section>
     </div>
   );
