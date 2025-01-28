@@ -1,26 +1,45 @@
-import React, { useState, useCallback } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from "@tanstack/react-query";
+import { useState, useCallback, useEffect } from "react";
 
-export function companyList(){}
+export function CompanyList() {
+  useEffect(() => {
+    fetchApiData();
+  }, []);
+  // useEffect(() => {
+  //   const fetchApiData = async () => {
+  //     const getData = await fetch(
+  //       "https://data.brreg.no/enhetsregisteret/api/kommuner?size=100"
+  //     );
+  //     const response = await getData.json();
+  //     console.log(response);
+  //     // console.log(getData);
+  //   };
+  //   fetchApiData();
+  // }, []);
+
   // State for søkeparametere
   const [searchParams, setSearchParams] = useState({
-    companyName: '',
-    year: '',
-    kommune: '',
+    companyName: "",
+    year: "",
+    kommune: "",
   });
 
   // Hent kommunedata fra API-et
-  const { data: kommuneData, isLoading: isLoadingKommuner, error: kommuneError } = useQuery({
-    queryKey: ['kommuner'],
+  const {
+    data: kommuneData,
+    isLoading: isLoadingKommuner,
+    error: kommuneError,
+  } = useQuery({
+    queryKey: ["kommuner"],
     queryFn: () =>
-      fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=100')
+      fetch("https://data.brreg.no/enhetsregisteret/api/kommuner?size=100")
         .then((res) => res.json())
         .then((data) => data._embedded.kommuner), // Tilpass til API-strukturen
   });
 
   // Funksjon for å hente selskaper basert på søkeparametere
   const fetchCompanies = useCallback(() => {
-    let url = 'https://data.brreg.no/enhetsregisteret/api/enheter/?size=100';
+    let url = "https://data.brreg.no/enhetsregisteret/api/enheter/?size=100";
 
     if (searchParams.companyName) {
       url += `&navn=${encodeURIComponent(searchParams.companyName)}`;
@@ -31,11 +50,13 @@ export function companyList(){}
     }
 
     if (searchParams.kommune) {
-      console.log('Kommune valgt:', searchParams.kommune);
-      url += `&foretningsadresse.kommune=${encodeURIComponent(searchParams.kommune)}`;
+      console.log("Kommune valgt:", searchParams.kommune);
+      url += `&foretningsadresse.kommune=${encodeURIComponent(
+        searchParams.kommune
+      )}`;
     }
 
-    console.log('Generert URL:', url);
+    console.log("Generert URL:", url);
 
     return fetch(url).then((res) => {
       if (!res.ok) {
@@ -46,8 +67,13 @@ export function companyList(){}
   }, [searchParams]);
 
   // React Query for å hente selskaper
-  const { data: companyData, isLoading: isLoadingCompanies, error: companyError, refetch } = useQuery({
-    queryKey: ['companies', searchParams],
+  const {
+    data: companyData,
+    isLoading: isLoadingCompanies,
+    error: companyError,
+    refetch,
+  } = useQuery({
+    queryKey: ["companies", searchParams],
     queryFn: fetchCompanies,
     enabled: false, // Må trigges manuelt med refetch()
   });
@@ -119,7 +145,9 @@ export function companyList(){}
         <p>Laster selskaper...</p>
       ) : companyError ? (
         <p>En feil oppstod ved henting av selskaper: {companyError.message}</p>
-      ) : companyData && companyData._embedded && companyData._embedded.enheter ? (
+      ) : companyData &&
+        companyData._embedded &&
+        companyData._embedded.enheter ? (
         <ul>
           {companyData._embedded.enheter.map((company) => (
             <li key={company.organisasjonsnummer}>
@@ -132,11 +160,16 @@ export function companyList(){}
       )}
     </div>
   );
-};
+}
 
 // Funksjon for å hente kommunedata fra API-et
-const fetchApiData = () =>
-  fetch('https://data.brreg.no/enhetsregisteret/api/kommuner?size=100')
-    .then((res) => res.json())
-    .then((data) => data._embedded.kommuner); // Tilpass til API-strukturen
-
+const fetchApiData = async () => {
+  const getData = await fetch(
+    "https://data.brreg.no/enhetsregisteret/api/kommuner?size=100"
+  );
+  const response = await getData.json();
+  console.log(response);
+  return response;
+  // .then((res) => res.json())
+  // .then((data) => data._embedded.kommuner); // Tilpass til API-strukturen
+};
