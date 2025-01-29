@@ -37,9 +37,9 @@ export function CompanyList() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    console.log(kommuneData)
-    const selectedKommune = kommuneData.find(k => k.navn === document.getElementById('kommune').value);
-    console.log(selectedKommune)
+    
+    const selectedKommune = kommuneData._embedded.kommuner.find((k) => k.navn === document.getElementById('kommune').value);
+    
     setSearchParams({
       companyName: inputCompanyName,
       year: document.getElementById('year').value,
@@ -56,6 +56,7 @@ export function CompanyList() {
 
   const sortedKommuner = kommuneData?._embedded?.kommuner
     .sort((a, b) => a.navn.localeCompare(b.navn, 'nb-NO')) || [];
+    console.log(kommuneData)
 
     const filteredCompanies = data?._embedded?.enheter
     .filter(enhet => new Date(enhet.stiftelsesdato) >= new Date('2000-01-01'))
