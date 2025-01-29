@@ -2,7 +2,10 @@
   border: solid, grey 1px;
   border-radius: 18px;
   box-shadow: 10px 10px 5px lightcoral;
-  -webkit-column-count: 3;
+}
+.company-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 ul {

@@ -58,6 +58,9 @@ input {
   font-size: 16px;
   padding: 16px;
 }
+.search {
+  border: solid black;
+}
 
 ::placeholder {
   color: blue;
