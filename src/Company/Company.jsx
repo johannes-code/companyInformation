@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import Modal from '../components/modal/modal.jsx'
 
 // Cookie-funksjoner
 function setCookie(name, value, days) {
@@ -25,12 +26,16 @@ function getCookie(name) {
 
 export function CompanyList() {
   const [inputCompanyName, setInputCompanyName] = useState("");
+  const [selectedCompany, setSelectedCompany] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [yearOptions, setYearOptions] = useState([]);
   const [searchParams, setSearchParams] = useState({
     companyName: "",
     year: "",
     kommuneNumber: "",
   });
+  
+
 
   useEffect(() => {
     const currentYear = new Date().getFullYear();
@@ -44,6 +49,7 @@ export function CompanyList() {
     const savedCompanyName = getCookie("companyName");
     const savedYear = getCookie("year");
     const savedKommune = getCookie("kommune");
+
 
     if (savedCompanyName) setInputCompanyName(savedCompanyName);
     if (savedYear) document.getElementById("year").value = savedYear;
@@ -85,7 +91,6 @@ export function CompanyList() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-
     const selectedKommune = kommuneData._embedded.kommuner.find(
       (k) => k.navn === document.getElementById("kommune").value
     );
@@ -109,6 +114,16 @@ export function CompanyList() {
     refetch();
   };
 
+  const handleOpenModal = (company) => {
+    setSelectedCompany(company);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCompany(null);
+  }
+
   if (isPending) return "Loading...";
   if (error)
     return "An error has occurred: " + error.message;
@@ -129,12 +144,18 @@ export function CompanyList() {
         stiftelsesdato: enhet.stiftelsesdato,
         organisasjonsnummer: enhet.organisasjonsnummer,
         kommune:
-          enhet.forretningsadresse?.kommune || "N/A",
+          enhet.forretningsadresse?.kommune,
+        aktivitet: enhet.aktivitet,
+        regnskap: enhet.sisteInsendteAarsregnskap,
+        konkurs: enhet.konkurs
+
+        || "N/A",
       }))
       .sort((a, b) =>
         a.navn.localeCompare(b.navn, "nb-NO")
       ) || [];
 
+  
   return (
     <div>
       <section id="search-section">
@@ -175,6 +196,8 @@ export function CompanyList() {
               {filteredCompanies.map((company) => (
                 <li
                   key={`name-${company.organisasjonsnummer}`}
+                  onClick={() => handleOpenModal(company)}
+                  style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline'}}
                 >
                   {company.navn}
                 </li>
@@ -209,6 +232,27 @@ export function CompanyList() {
           </div>
         </div>
       </section>
+      <Modal 
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        isBankrupt={selectedCompany?.konkurs}
+        >
+          {selectedCompany && (
+        <>
+          <h2>{selectedCompany.navn}</h2>
+          {selectedCompany.konkurs && (
+            <p style={{ color: 'red', fontWeight: 'bold'}}>
+              OBS: Denne bedriften er konkurs!
+              </p>
+          )}
+          <p>Establisment Date: {selectedCompany.stiftelsesdato}</p>
+          <p>Organization Number: {selectedCompany.organisasjonsnummer}</p>
+          <p>commune: {selectedCompany.kommune}</p>
+          <p>Activity: {selectedCompany.aktivitet}</p>
+          <p>Last Annual Accounts:{selectedCompany.sisteInsendteAarsregnskap}</p>
+        </>
+      )}
+      </Modal>
     </div>
   );
 }
