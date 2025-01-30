@@ -19,9 +19,11 @@
 }
 
 .modal-content.konkurs {
-  background-color: #ffcccc; /* Lys rød for konkurs */
+  background-color: #d32a2a; /* Lys rød for konkurs */
+  border: solid 1px black;
 }
 
 .modal-content button {
   margin-top: 10px;
+  border-radius: 8px;
 }

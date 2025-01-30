@@ -104,7 +104,6 @@ export function CompanyList() {
     setCookie(
       "kommune",
       selectedKommune ? selectedKommune.navn : "",
-      7
     );
 
     setSearchParams({
@@ -116,6 +115,7 @@ export function CompanyList() {
     refetch();
   };
 
+  
   const handleOpenModal = (company) => {
     setSelectedCompany(company);
     setIsModalOpen(true);
@@ -134,7 +134,7 @@ export function CompanyList() {
     kommuneData?._embedded?.kommuner.sort((a, b) =>
       a.navn.localeCompare(b.navn, "nb-NO")
     ) || [];
-
+   
   const filteredCompanies =
     data?._embedded?.enheter
       .filter(
@@ -148,16 +148,13 @@ export function CompanyList() {
         kommune:
           enhet.forretningsadresse?.kommune,
         aktivitet: enhet.aktivitet,
-        regnskap: enhet.sisteInsendteAarsregnskap,
-        konkurs: enhet.konkurs
-
-        || "N/A",
-      }))
-      .sort((a, b) =>
+        hjemmeside: enhet.hjemmeside,
+        konkurs: enhet.konkurs === true,
+      })).sort((a, b) =>
         a.navn.localeCompare(b.navn, "nb-NO")
       ) || [];
-
-  
+      console.log(data._embedded.enheter)
+      
   return (
     <div>
       <section id="search-section">
@@ -197,53 +194,53 @@ export function CompanyList() {
       </section>
 
       <section id="result">
-        <div className="company-list">
-          <div className="column">
-            <h5>Company Name</h5>
-            <ul>
-              {filteredCompanies.map((company) => (
-                <li
-                  key={`name-${company.organisasjonsnummer}`}
-                  onClick={() => handleOpenModal(company)}
-                  style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline'}}
-                >
-                  {company.navn}
-                </li>
-              ))}
-            </ul>
-          </div>
+  <div className="company-list">
+    <div className="column">
+      <h5>Company Name</h5>
+      <ul>
+        {filteredCompanies.map((company) => (
+          <li
+            key={`name-${company.organisasjonsnummer}`}
+            onClick={() => handleOpenModal(company)}
+            style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline'}}
+          >
+            {company.navn}
+          </li>
+        ))}
+      </ul>
+    </div>
 
-          <div className="column">
-            <h5>Establishment Date</h5>
-            <ul>
-              {filteredCompanies.map((company) => (
-                <li
-                  key={`date-${company.organisasjonsnummer}`}
-                >
-                  {company.stiftelsesdato}
-                </li>
-              ))}
-            </ul>
-          </div>
+    <div className="column">
+      <h5>Establishment Date</h5>
+      <ul>
+        {filteredCompanies.map((company) => (
+          <li
+            key={`date-${company.organisasjonsnummer}`}
+          >
+            {company.stiftelsesdato}
+          </li>
+        ))}
+      </ul>
+    </div>
 
-          <div className="column">
-            <h5>Organization Number</h5>
-            <ul>
-              {filteredCompanies.map((company) => (
-                <li
-                  key={`org-${company.organisasjonsnummer}`}
-                >
-                  {company.organisasjonsnummer}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
+    <div className="column">
+      <h5>Organization Number</h5>
+      <ul>
+        {filteredCompanies.map((company) => (
+          <li
+            key={`org-${company.organisasjonsnummer}`}
+          >
+            {company.organisasjonsnummer}
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</section>
       <Modal 
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        isBankrupt={selectedCompany?.konkurs}
+        isBankrupt={selectedCompany?.konkurs === true}
         >
           {selectedCompany && (
         <>
@@ -255,9 +252,20 @@ export function CompanyList() {
           )}
           <p>Establisment Date: {selectedCompany.stiftelsesdato}</p>
           <p>Organization Number: {selectedCompany.organisasjonsnummer}</p>
-          <p>commune: {selectedCompany.kommune}</p>
+          <p>Commune: {selectedCompany.kommune}</p>
           <p>Activity: {selectedCompany.aktivitet}</p>
-          <p>Last Annual Accounts:{selectedCompany.sisteInsendteAarsregnskap}</p>
+          <p>Homepage:
+            <a
+              href={selectedCompany.hjemmeside}
+              onClick={(e) => {
+                e.preventDefault();
+                window.open(selectedCompany.hjemmeside, '_blank', 'noopener,noreferrer');
+              }}
+            >
+              {selectedCompany.hjemmeside}
+            </a>
+        </p>
+
         </>
       )}
       </Modal>
