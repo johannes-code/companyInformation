@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import Modal from '../components/modal/modal.jsx'
+import {Modal} from '../components/modal/modal.jsx'
 
 // Cookie-funksjoner
 function setCookie(name, value, days) {
@@ -27,6 +27,8 @@ function getCookie(name) {
 export function CompanyList() {
   const [inputCompanyName, setInputCompanyName] = useState("");
   const [selectedCompany, setSelectedCompany] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedKommune, setSelectedKommune] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [yearOptions, setYearOptions] = useState([]);
   const [searchParams, setSearchParams] = useState({
@@ -52,9 +54,9 @@ export function CompanyList() {
 
 
     if (savedCompanyName) setInputCompanyName(savedCompanyName);
-    if (savedYear) document.getElementById("year").value = savedYear;
-    if (savedKommune) document.getElementById("kommune").value = savedKommune;
-
+    if (savedYear) setSelectedYear(savedYear);
+    if (savedKommune) setSelectedKommune(savedKommune);
+    
     // Oppdater searchParams med lagrede verdier
     setSearchParams((prev) => ({
       ...prev,
@@ -168,22 +170,28 @@ export function CompanyList() {
               setInputCompanyName(e.target.value)
             }
           />
-          <select id="year">
-            <option value="">Select Year</option>
-            {yearOptions.map((yearOption) => (
-              <option key={yearOption} value={yearOption}>
-                {yearOption}
-              </option>
-            ))}
+          <select id="year" 
+          value={selectedYear} 
+          onChange={(e) => setSelectedYear(e.target.value)}
+        >
+          <option value="">Select Year</option>
+          {yearOptions.map((yearOption) => (
+            <option key={yearOption} value={yearOption}>
+              {yearOption}
+            </option>
+          ))}
           </select>
-          <select id="kommune">
-            <option value="">Velg kommune</option>
-            {sortedKommuner.map((kommune) => (
-              <option key={kommune.nummer} value={kommune.navn}>
-                {kommune.navn}
-              </option>
-            ))}
-          </select>
+          <select id="kommune" 
+          value={selectedKommune} 
+          onChange={(e) => setSelectedKommune(e.target.value)}
+          >
+          <option value="">Velg kommune</option>
+          {sortedKommuner.map((kommune) => (
+          <option key={kommune.nummer} value={kommune.navn}>
+          {kommune.navn}
+          </option>
+          ))}
+            </select>
           <button type="submit">Search</button>
         </form>
       </section>
@@ -241,7 +249,7 @@ export function CompanyList() {
         <>
           <h2>{selectedCompany.navn}</h2>
           {selectedCompany.konkurs && (
-            <p style={{ color: 'red', fontWeight: 'bold'}}>
+            <p style={{ color: 'red', fontWeight: 'bold', fontSize: '24px'}}>
               OBS: Denne bedriften er konkurs!
               </p>
           )}

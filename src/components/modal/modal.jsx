@@ -1,12 +1,11 @@
-import React from "react";
 import './modal.css';
 
-export function Modal() = ({ isOpen, onClose, children }) => {
+export const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null; // Hvis modal ikke er åpen, returner null
 
   const modalStyle = {
     backgroundColor: children.props.selectedCompany?.konkurs ? 
-    '#ffcccc': white,
+      '#ffcccc': 'white',
     padding: '20px',
     borderRadius: '5px',
     maxWidth: '500px',
@@ -22,4 +21,4 @@ export function Modal() = ({ isOpen, onClose, children }) => {
     </div>
   );
 };
-)
+
