@@ -1,0 +1,26 @@
+#result {
+  border: solid, grey 1px;
+  border-radius: 18px;
+  box-shadow: 10px 10px 5px lightcoral;
+  /* -webkit-column-count: 3; */
+}
+
+.company_list {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  /* background-color: aqua; */
+}
+
+.column {
+  /* border: 2px solid red; */
+}
+
+.company_section ul {
+  padding-top: 16px;
+  list-style-type: none;
+}
+
+.company_section li {
+  display: grid;
+  padding: 2px;
+}
